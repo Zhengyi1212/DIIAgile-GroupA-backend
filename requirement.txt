@@ -1,0 +1,8 @@
+Flask==3.0.0
+Flask-SQLAlchemy==3.0.5
+Flask-Migrate==4.0.4
+Flask-CORS==4.0.0
+Flask-RESTful==0.3.10
+python-dotenv==1.0.0
+gunicorn==21.2.0
+pymysql==1.1.0
