@@ -1,0 +1,30 @@
+{
+    "qwe": {
+        "password": "qwe",
+        "role": "Student"
+    },
+    "abc": {
+        "password": "123",
+        "role": "Student"
+    },
+    "123123": {
+        "password": "qwe",
+        "role": "Student"
+    },
+    "eeee": {
+        "password": "123",
+        "role": "Student"
+    },
+    "admin": {
+        "password": "123",
+        "role": "Student"
+    },
+    "karen": {
+        "password": "123",
+        "role": "Student"
+    },
+    "Chris": {
+        "password": "123",
+        "role": "Student"
+    }
+}
