@@ -22,8 +22,8 @@ print(database_file)
 #}
 
 def load_users(database_file):
-    print(my_path)
-    print(database_file)
+    #print(my_path)
+    #print(database_file)
     """Load user data from the JSON file, or return an empty dictionary if the file does not exist."""
     if os.path.exists(database_file):
         with open(database_file, "r") as file:
@@ -35,26 +35,26 @@ def login():
     data = request.get_json()
     if not data:
         return jsonify({"success": False, "message": "Invalid request data"}), 400
-
-    username = data.get("username")
+    
+    
+    email = data.get("email")
     password = data.get("password")
     
-    print(username)
-    print(password)
 
-    if not username or not password:
-        return jsonify({"success": False, "message": "Username and password are required"}), 400
+    if not email or not password:
+        return jsonify({"success": False, "message": "Email and password are required"}), 400
 
     users = load_users(database_file)
-    if username not in users:
-        return jsonify({"success": False, "message": "User does not exist. Please register first!"}), 401
+    if email not in users:
+        return jsonify({"success": False, "message": "Account does not exist. Please register first!"}), 401
 
-    user = users[username]
+    user = users[email]
     if user and user["password"] == password:
         token = jwt.encode(
             {
-                "user_id": username,
+                "username": user["username"],
                 "role": user["role"],
+                "email": email,
                 "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=1)  # 1小时过期
             },
             SECRET_KEY,

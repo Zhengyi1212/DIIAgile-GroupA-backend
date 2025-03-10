@@ -21,15 +21,16 @@ def sign_up():
     data = request.get_json()
     if not data:
         return jsonify({"success": False, "message": "Invalid request data"}), 400
-
+   
+    email = data.get("email")
     username = data.get("username")
     password = data.get("password")
     role = data.get("role")
 
-    if not username or not password or not role:
-        return jsonify({"success": False, "message": "Username, password, and role are required"}), 400
 
-    print(username)
+    if not username or not password or not role:
+        return jsonify({"success": False, "message": "Email, username, password, and role are required"}), 400
+
 
     # Load existing database
     database = {}
@@ -38,11 +39,11 @@ def sign_up():
             database = json.load(file)
 
     # Check if the username already exists
-    if username in database:
-        return jsonify({"success": False, "message": "Username already exists"}), 401
+    if email in database:
+        return jsonify({"success": False, "message": "Account already exists with the given email"}), 401
 
     # Add new user to the database
-    database[username] = {"password": password, "role": role}
+    database[email] = {"username":username,"password": password, "role": role}
 
     # Save the updated database
     with open(database_file, "w") as file:
