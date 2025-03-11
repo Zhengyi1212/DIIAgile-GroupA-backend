@@ -23,6 +23,7 @@ def sign_up():
         return jsonify({"success": False, "message": "Invalid request data"}), 400
    
     email = data.get("email")
+    print(email)
     username = data.get("username")
     password = data.get("password")
     role = data.get("role")
