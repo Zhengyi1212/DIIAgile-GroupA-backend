@@ -1,37 +1,4 @@
 {
-    "qwe": {
-        "password": "qwe",
-        "role": "Student"
-    },
-    "abc": {
-        "password": "123",
-        "role": "Student"
-    },
-    "123123": {
-        "password": "qwe",
-        "role": "Student"
-    },
-    "eeee": {
-        "password": "123",
-        "role": "Student"
-    },
-    "admin": {
-        "password": "123",
-        "role": "Student"
-    },
-    "karen": {
-        "password": "123",
-        "role": "Student"
-    },
-    "Chris": {
-        "password": "123",
-        "role": "Student"
-    },
-    "": {
-        "username": "2542721@dundee.ac.uk",
-        "password": "123",
-        "role": "Student"
-    },
     "2542721@dundee.ac.uk": {
         "username": "mike",
         "password": "123",
