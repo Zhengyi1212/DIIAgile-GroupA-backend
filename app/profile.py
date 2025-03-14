@@ -11,16 +11,6 @@ database_file= os.path.join(my_path, "..\database.txt")
 
 profile_bp = Blueprint("profile", __name__)
 
-def load_users(database_file):
-    #print(my_path)
-    #print(database_file)
-    """Load user data from the JSON file, or return an empty dictionary if the file does not exist."""
-    if os.path.exists(database_file):
-        with open(database_file, "r") as file:
-            return json.load(file)
-    return {}
-
-
 @profile_bp.route('/profile', methods=["POST"])
 def edit_profile():
     data = request.get_json()
@@ -30,6 +20,7 @@ def edit_profile():
     email = data.get("email")
     print(f'Email:{email}')
     new_username = data.get("username")
+    print(f'USername:{new_username}')
     new_password = data.get("password")
     
     database = {}
@@ -52,7 +43,7 @@ def edit_profile():
             "username": user["username"],
             "role": user["role"],
             "email": email,
-            "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=1)  # 1小时过期
+            "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=1)  
         },
             SECRET_KEY,
             algorithm="HS256"
