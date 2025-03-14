@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify, Blueprint
-from flask_cors import CORS
+
 import json
 import os
 
@@ -34,7 +34,6 @@ def sign_up():
         return jsonify({"success": False, "message": "Email, username, password, and role are required"}), 400
 
 
-    # Load existing database
     database = {}
     if os.path.exists(database_file):
         with open(database_file, "r") as file:
@@ -46,7 +45,7 @@ def sign_up():
 
     # Add new user to the database
     database[email] = {"username":username,"password": password, "role": role}
-
+    print(email)
     # Save the updated database
     with open(database_file, "w") as file:
         json.dump(database, file, indent=4)

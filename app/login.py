@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify, Blueprint
-from flask_cors import CORS
+
 import jwt
 import datetime
 import json

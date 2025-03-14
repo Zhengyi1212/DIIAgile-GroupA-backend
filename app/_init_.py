@@ -13,6 +13,7 @@ def create_app():
     app.register_blueprint(login_bp)
     app.register_blueprint(signup_bp)
     app.register_blueprint(profile_bp)
+    
     # Enable CORS for the entire app
     CORS(app)
      
