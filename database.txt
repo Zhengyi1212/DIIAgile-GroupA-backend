@@ -1,12 +1,17 @@
 {
     "2542721@dundee.ac.uk": {
-        "username": "\u5927\u5927\u5927\u5c0f",
-        "password": "********",
+        "username": "testuser1",
+        "password": "123",
         "role": "Student"
     },
     "1371360199@qq.com": {
         "username": "dadad",
         "password": "123",
         "role": "Student"
+    },
+     "2542892@dundee.ac.uk": {
+        "username": "testAdmin",
+        "password": "123",
+        "role": "admin"
     }
 }
