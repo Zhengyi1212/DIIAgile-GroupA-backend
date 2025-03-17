@@ -1,47 +1,44 @@
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import relationship
+
+Base = declarative_base()
+
+class Booking(Base):
+    __tablename__ = 'bookings'
+
+    booking_id = Column(Integer, primary_key=True)
+    email = Column(String(100), nullable=False)
+    classroom_id = Column(Integer, ForeignKey('classrooms.classroom_id'), nullable=False)
+    user_email = Column(String(100), ForeignKey('users.email'), nullable=False)
+
+    def __repr__(self):
+        return f"<Booking(booking_id={self.booking_id}, email='{self.email}', classroom_id={self.classroom_id})>"
 
 
-from flask_sqlalchemy import SQLAlchemy
-
-db = SQLAlchemy()
-
-class User(db.Model):
+class User(Base):
     """User model."""
     __tablename__ = 'users'
-    email = db.Column(db.String(120), primary_key=True, unique=True, nullable=False)
-    name = db.Column(db.String(100), nullable=False)
-    password_hash = db.Column(db.String(255), nullable=False)
+    email = Column(String(100), primary_key=True, unique=True, nullable=False)
+    username = Column(String(100), nullable=False)
+    password_hash = Column(String(255), nullable=False)
+    role = Column(String(50))
+    books = relationship("Booking", backref="user")
 
     def __repr__(self):
-        return f"<User {self.name}>"
+        return f"<User(email='{self.email}', username='{self.username}', role='{self.role}')>"
 
-class Classroom(db.Model):
-    """Classroom model."""
+
+class Classroom(Base):
     __tablename__ = 'classrooms'
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    campus = db.Column(db.String(100), nullable=False)
-    block = db.Column(db.String(50), nullable=False)
-    floor = db.Column(db.Integer, nullable=False)
-    number = db.Column(db.Integer, nullable=False)
+     
+    classroom_id = Column(Integer, primary_key=True)
+    building = Column(String(50), nullable=False)
+    floor = Column(Integer, nullable=False)
+    classroom_name = Column(String(100), nullable=False)
+    start_time = Column(DateTime, nullable=False)
+    capacity = Column(Integer, nullable=False)
+    device = Column(Integer, nullable=False)
 
     def __repr__(self):
-        return f"<Classroom {self.campus} - Block {self.block} - Floor {self.floor}>"
-
-
-class Schedule(db.Model):
-    """Schedule model with free_times."""
-    __tablename__ = 'schedules'
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    classroom_id = db.Column(db.Integer, db.ForeignKey('classrooms.id'), nullable=False)
-    free_times = db.Column(db.String, nullable=False)  # String to store all free times (e.g., "01-1,01-2,02-3")
-    classroom = db.relationship('Classroom', backref=db.backref('schedules', lazy=True))
-    def __repr__(self):
-        return f"<Schedule Classroom ID {self.classroom_id} - Free Times {self.free_times}>"
-
-
-def init_db(app):
-    """Initialize the database with the Flask app."""
-    db.init_app(app)
-    with app.app_context():
-        db.create_all()
-
-
+        return f"<Classroom(classroom_id={self.classroom_id}, building='{self.building}', floor={self.floor}, classroom_name='{self.classroom_name}', start_time='{self.start_time}')>"
