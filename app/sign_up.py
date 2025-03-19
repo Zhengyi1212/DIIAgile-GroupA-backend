@@ -1,19 +1,11 @@
 from flask import Flask, request, jsonify, Blueprint
-
+from .models import get_db, User
 import json
-import os
+
 
 # Define the Blueprint for sign-up
 signup_bp = Blueprint("sign_up", __name__)
 
-
-
-# Modification: 1.register via email
-        #       2. verify subfix of the email to ensure it is a dundee eami
-          #     3. username and password
-
-
-database_file = 'database.txt'
 
 @signup_bp.route('/signup', methods=['POST'])
 def sign_up():
@@ -32,23 +24,43 @@ def sign_up():
 
     if not username or not password or not role:
         return jsonify({"success": False, "message": "Email, username, password, and role are required"}), 400
+    
+    ## start a seesion with db
+    db = next(get_db())
+    
+    try :
+        existing_user = db.query(User).filter(User.email == email).first()
+        
 
+    # Step 2: If the user exists, return False
+        if existing_user:
+            return jsonify({"success": False, "message": "Account already exists with the given email"}), 401
+        
+        # add to database"
+        print(email)
+        new_user = User(username=username, email=email, role=role,password_hash=static_hash(password))
+        db.add(new_user)
+        db.commit()
+        db.refresh(new_user)
+        print("Signup sucessfully!")
+        return jsonify({"success": True, "message": "Registration successful"})
 
-    database = {}
-    if os.path.exists(database_file):
-        with open(database_file, "r") as file:
-            database = json.load(file)
+    except Exception as e:
+        print(f"❌ 数据库连接失败: {e}")
 
-    # Check if the username already exists
-    if email in database:
-        return jsonify({"success": False, "message": "Account already exists with the given email"}), 401
+    
+import hashlib
 
-    # Add new user to the database
-    database[email] = {"username":username,"password": password, "role": role}
-    print(email)
-    # Save the updated database
-    with open(database_file, "w") as file:
-        json.dump(database, file, indent=4)
+# Create a SHA-256 hash of a string
+def static_hash(input_string):
+    # Encode the string to bytes (required by hashlib)
+    input_bytes = input_string.encode('utf-8')
+    
+    # Create a SHA-256 hash object
+    hash_object = hashlib.sha256(input_bytes)
+    
+    # Get the hexadecimal digest of the hash
+    return hash_object.hexdigest()
 
-    return jsonify({"success": True, "message": "Registration successful"})
-
+# Example usage
+print(static_hash("hello")) 

@@ -1,34 +1,11 @@
 from flask import Flask, request, jsonify, Blueprint
-
 import jwt
 import datetime
-import json
 import os
+from .models import User, get_db
 
-SECRET_KEY = "your_secret_key"
 login_bp = Blueprint("login", __name__)
 
-my_path = os.path.abspath(os.path.dirname(__file__))
-
-database_file= os.path.join(my_path, "..\database.txt")
-print(database_file)
-
-# login via : email + password
-
-# 模拟数据库用户数据
-#users = {
-#    "lecturer": {"password": "123456", "role": "Lecturer"},
-#    "student": {"password": "123456", "role": "Student"},
-#}
-
-def load_users(database_file):
-    #print(my_path)
-    #print(database_file)
-    """Load user data from the JSON file, or return an empty dictionary if the file does not exist."""
-    if os.path.exists(database_file):
-        with open(database_file, "r") as file:
-            return json.load(file)
-    return {}
 
 @login_bp.route('/login', methods=['POST'])
 def login():
@@ -40,16 +17,19 @@ def login():
     email = data.get("email")
     password = data.get("password")
     
-
-    if not email or not password:
-        return jsonify({"success": False, "message": "Email and password are required"}), 400
-
-    users = load_users(database_file)
-    if email not in users:
+    # start session
+    db = next(get_db())
+    user_ = db.query(User)\
+        .filter(User.email == email)\
+        .all()
+    if not user_:
         return jsonify({"success": False, "message": "Account does not exist. Please register first!"}), 401
 
-    user = users[email]
-    if user and user["password"] == password:
+    user = user_[0]
+    print(password)
+    print(static_hash(password))
+    print(user.password_hash)
+    if user.password_hash == static_hash(password):
         token = jwt.encode(
             {
                 "username": user["username"],
@@ -57,9 +37,26 @@ def login():
                 "email": email,
                 "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=1)  # 1小时过期
             },
-            SECRET_KEY,
+          
             algorithm="HS256"
         )
+        print("Login sucessfully!")
         return jsonify({"success": True, "token": token})
     else:
         return jsonify({"success": False, "message": "Invalid username or password"}), 401
+    
+import hashlib
+
+# Create a SHA-256 hash of a string
+def static_hash(input_string):
+    # Encode the string to bytes (required by hashlib)
+    input_bytes = input_string.encode('utf-8')
+    
+    # Create a SHA-256 hash object
+    hash_object = hashlib.sha256(input_bytes)
+    
+    # Get the hexadecimal digest of the hash
+    return hash_object.hexdigest()
+
+# Example usage
+print(static_hash("hello")) 

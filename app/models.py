@@ -1,10 +1,10 @@
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import relationship, sessionmaker
+
+from sqlalchemy.orm import relationship, sessionmaker,declarative_base
 import pymysql  # 确保安装了 pymysql
 
 # MySQL 连接信息
-DATABASE_URL = "mysql+pymysql://root:password@localhost:3306/booksystem"
+DATABASE_URL = "mysql+pymysql://root:xd03@localhost:3306/booksystem"
 
 # 创建 SQLAlchemy 连接
 Base = declarative_base()
@@ -18,8 +18,8 @@ class Booking(Base):
     classroom_id = Column(Integer, ForeignKey('classrooms.classroom_id'), nullable=False)
     user_email = Column(String(100), ForeignKey('users.email'), nullable=False)
 
-    user = relationship('User', back_populates='bookings')
-    classroom = relationship("Classroom", back_populates="bookings")
+    #user = relationship('User', back_populates='bookings')
+    #classroom = relationship("Classroom", back_populates="bookings")
 
     def __repr__(self):
         return f"<Booking(booking_id={self.booking_id}, user_email='{self.user_email}', classroom_id={self.classroom_id})>"
@@ -32,7 +32,7 @@ class User(Base):
     password_hash = Column(String(255), nullable=False)
     role = Column(String(50))
 
-    bookings = relationship("Booking", back_populates="user")
+    #bookings = relationship("Booking", back_populates="users")
 
     def __repr__(self):
         return f"<User(email='{self.email}', username='{self.username}', role='{self.role}')>"
@@ -50,7 +50,7 @@ class Classroom(Base):
     device = Column(String(255), nullable=False)
     is_available = Column(String(10), nullable=False)
 
-    bookings = relationship("Booking", back_populates="classroom")
+    #bookings = relationship("Booking", back_populates="classroom")
 
     def __repr__(self):
         return f"<Classroom(classroom_id={self.classroom_id}, building='{self.building}', floor={self.floor}, classroom_name='{self.classroom_name}', start_time='{self.start_time}')>"
@@ -60,6 +60,12 @@ def test_db_connection():
     try:
         with engine.connect() as connection:
             print("✅ 成功连接到 MySQL 数据库！")
+            db = next(get_db())
+            ers = db.query(User)\
+             .filter(User.email == "123")\
+             .all()
+            print(ers[0].role)
+            print(ers[0].password_hash)
 
     except Exception as e:
         print(f"❌ 数据库连接失败: {e}")
@@ -71,4 +77,3 @@ def get_db():
         yield db
     finally:
         db.close()
-
