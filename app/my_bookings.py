@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify
-from models import Booking,get_db
+from .models import Booking, get_db
 
-from sqlalchemy.orm import sessionmaker,joinedload
+from sqlalchemy.orm import joinedload
 
 mybooking_bp = Blueprint("my_bookings", __name__)
 
