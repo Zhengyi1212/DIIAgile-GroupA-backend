@@ -19,8 +19,6 @@ def get_bookings():
    return jsonify({'bookings':bookings,"success": False, "message": "Account already exists with the given email"})
    
 
-
-
 def get_bookings_from_database(email):
    db = next(get_db()) 
     
@@ -43,7 +41,8 @@ def get_bookings_from_database(email):
                 "floor": booking.classroom.floor,
                 "classroom_name": booking.classroom.classroom_name,
                 "capacity": booking.classroom.capacity,
-                "device": booking.classroom.device
+                "device": booking.classroom.device,
+                "is_availble": booking.classroom.is_availble
             }
         })
        return jsonify(result)

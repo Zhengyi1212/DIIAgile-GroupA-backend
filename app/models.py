@@ -9,7 +9,6 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 class Booking(Base):
     __tablename__ = 'bookings'
-
     booking_id = Column(Integer, primary_key=True)
     classroom_id = Column(Integer, ForeignKey('classrooms.classroom_id'), nullable=False)
     user_email = Column(String(100), ForeignKey('users.email'), nullable=False)
@@ -42,7 +41,8 @@ class Classroom(Base):
     classroom_name = Column(String(100), nullable=False)
     start_time = Column(DateTime, nullable=False)
     capacity = Column(Integer, nullable=False)
-    device = Column(Integer, nullable=False)
+    device = Column(String, nullable=False)
+    is_available = Column(String,nullable=False)
     
    
     
