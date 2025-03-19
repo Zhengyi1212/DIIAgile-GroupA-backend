@@ -11,13 +11,13 @@ def get_bookings():
    data = request.get_json()
    if not data:
         return jsonify({"success": False, "message": "Invalid request data"}), 400
-    
+
    email = data.get('email')
-   
+
    bookings = get_bookings_from_database(email)
-   
+
    return jsonify({'bookings':bookings,"success": False, "message": "Account already exists with the given email"})
-   
+
 
 def get_bookings_from_database(email):
    db = next(get_db()) 

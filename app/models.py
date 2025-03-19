@@ -1,12 +1,17 @@
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, create_engine
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import relationship,sessionmaker
-from sqlalchemy import create_engine
+from sqlalchemy.orm import relationship, sessionmaker
+import pymysql  # 确保安装了 pymysql
 
+# MySQL 连接信息
+DATABASE_URL = "mysql+pymysql://root:password@localhost:3306/booksystem"
+
+# 创建 SQLAlchemy 连接
 Base = declarative_base()
-engine = create_engine('mysql:///your_database.db')
+engine = create_engine(DATABASE_URL, echo=True)  # echo=True 用于调试，生产环境可设为 False
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
+# 预定表
 class Booking(Base):
     __tablename__ = 'bookings'
     booking_id = Column(Integer, primary_key=True)
@@ -15,47 +20,55 @@ class Booking(Base):
 
     user = relationship('User', back_populates='bookings')
     classroom = relationship("Classroom", back_populates="bookings")
+
     def __repr__(self):
-        return f"<Booking(booking_id={self.booking_id}, email='{self.email}', classroom_id={self.classroom_id})>"
+        return f"<Booking(booking_id={self.booking_id}, user_email='{self.user_email}', classroom_id={self.classroom_id})>"
 
-
+# 用户表
 class User(Base):
-    """User model."""
     __tablename__ = 'users'
     email = Column(String(100), primary_key=True, unique=True, nullable=False)
     username = Column(String(100), nullable=False)
     password_hash = Column(String(255), nullable=False)
     role = Column(String(50))
-    bookings = relationship("Booking", backref="users")
+
+    bookings = relationship("Booking", back_populates="user")
 
     def __repr__(self):
         return f"<User(email='{self.email}', username='{self.username}', role='{self.role}')>"
 
-
+# 教室表
 class Classroom(Base):
     __tablename__ = 'classrooms'
-     
+
     classroom_id = Column(Integer, primary_key=True)
     building = Column(String(50), nullable=False)
     floor = Column(Integer, nullable=False)
     classroom_name = Column(String(100), nullable=False)
     start_time = Column(DateTime, nullable=False)
     capacity = Column(Integer, nullable=False)
-    device = Column(String, nullable=False)
-    is_available = Column(String,nullable=False)
-    
-   
-    
-    
+    device = Column(String(255), nullable=False)
+    is_available = Column(String(10), nullable=False)
+
+    bookings = relationship("Booking", back_populates="classroom")
+
     def __repr__(self):
         return f"<Classroom(classroom_id={self.classroom_id}, building='{self.building}', floor={self.floor}, classroom_name='{self.classroom_name}', start_time='{self.start_time}')>"
-    
-def create_tables():
-    Base.metadata.create_all(bind=engine)
 
+# 测试数据库连接
+def test_db_connection():
+    try:
+        with engine.connect() as connection:
+            print("✅ 成功连接到 MySQL 数据库！")
+
+    except Exception as e:
+        print(f"❌ 数据库连接失败: {e}")
+
+# 获取数据库会话
 def get_db():
     db = SessionLocal()
     try:
         yield db
     finally:
         db.close()
+
