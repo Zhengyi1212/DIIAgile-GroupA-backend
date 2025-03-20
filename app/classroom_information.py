@@ -1,13 +1,16 @@
-from flask import Blueprint, jsonify
+from flask import Blueprint, jsonify, request
 from .models import Classroom, get_db  # assuming model.py is in the same directory
+
 
 classroom_bp = Blueprint('classroom_information', __name__)
 
-@classroom_bp.route('/classroom', methods=['GET'])
+@classroom_bp.route('/classrooms', methods=['GET'])
 def get_classrooms():
     """
     Retrieve all classroom records from the database and return them as JSON.
     """
+    print("Access this method!")
+    
     db = next(get_db())
     try:
         classrooms = db.query(Classroom).all()
@@ -24,6 +27,6 @@ def get_classrooms():
                 "is_available": classroom.is_available
             })
         print("Classroom information retrived!")
-        return jsonify({"data": classroom_list}), 200
+        return jsonify({"success": True,"classrooms": classroom_list}), 200
     except Exception as e:
-        return jsonify({"error": f"An error occurred: {str(e)}"}), 500
+        return jsonify({"success": True, "message": f"An error occurred: {str(e)}"}), 500
