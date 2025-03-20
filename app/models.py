@@ -4,7 +4,7 @@ from sqlalchemy.orm import relationship, sessionmaker,declarative_base
 import pymysql  # 确保安装了 pymysql
 
 # MySQL 连接信息
-DATABASE_URL = "mysql+pymysql://root:password@localhost:3306/booksystem"
+DATABASE_URL = "mysql+pymysql://root:xd03@localhost:3306/booksystem"
 
 # 创建 SQLAlchemy 连接
 Base = declarative_base()
@@ -48,7 +48,7 @@ class Classroom(Base):
     start_time = Column(DateTime, nullable=False)
     capacity = Column(Integer, nullable=False)
     device = Column(String(255), nullable=False)
-    is_available = Column(String(10), nullable=False)
+    isAvailable = Column(String(10), nullable=False)
 
     #bookings = relationship("Booking", back_populates="classroom")
 

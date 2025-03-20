@@ -16,6 +16,7 @@ def get_classrooms():
         classrooms = db.query(Classroom).all()
         classroom_list = []
         for classroom in classrooms:
+            print(classroom.classroom_id)
             classroom_list.append({
                 "classroom_id": classroom.classroom_id,
                 "building": classroom.building,
@@ -24,9 +25,10 @@ def get_classrooms():
                 "start_time": classroom.start_time.isoformat() if classroom.start_time else None,
                 "capacity": classroom.capacity,
                 "device": classroom.device,
-                "is_available": classroom.is_available
+                "is_available": classroom.isAvailable
             })
         print("Classroom information retrived!")
         return jsonify({"success": True,"classrooms": classroom_list}), 200
     except Exception as e:
+        print("Something went wrong!!!")
         return jsonify({"success": True, "message": f"An error occurred: {str(e)}"}), 500
