@@ -1,10 +1,10 @@
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, create_engine
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, create_engine,func
 
 from sqlalchemy.orm import relationship, sessionmaker,declarative_base
 import pymysql  # 确保安装了 pymysql
 
 # MySQL 连接信息
-DATABASE_URL = "mysql+pymysql://root:xd03@localhost:3306/booksystem"
+DATABASE_URL = "mysql+pymysql://root:password@localhost:3306/booksystem"
 
 # 创建 SQLAlchemy 连接
 Base = declarative_base()
@@ -55,17 +55,25 @@ class Classroom(Base):
     def __repr__(self):
         return f"<Classroom(classroom_id={self.classroom_id}, building='{self.building}', floor={self.floor}, classroom_name='{self.classroom_name}', start_time='{self.start_time}')>"
 
+class LogTable(Base):
+    __tablename__ = 'logtable'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    event_time = Column(DateTime, default=func.now())  # 默认当前时间
+    event_description = Column(String(255), nullable=False)  # 事件描述
+
+    def __repr__(self):
+        return f"<LogTable(log_id={self.id}, event_time='{self.event_time}', event_description='{self.event_description}')>"
+
 # 测试数据库连接
 def test_db_connection():
     try:
         with engine.connect() as connection:
             print("✅ 成功连接到 MySQL 数据库！")
             db = next(get_db())
-            ers = db.query(User)\
-             .filter(User.email == "123")\
+            ers = db.query(LogTable)\
              .all()
-            print(ers[0].role)
-            print(ers[0].password_hash)
+            print(ers)
 
     except Exception as e:
         print(f"❌ 数据库连接失败: {e}")
@@ -77,3 +85,4 @@ def get_db():
         yield db
     finally:
         db.close()
+
