@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, create_engine,func
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, create_engine,func,Boolean
 
 from sqlalchemy.orm import relationship, sessionmaker,declarative_base
 import pymysql  # 确保安装了 pymysql
@@ -19,7 +19,7 @@ class Booking(Base):
     user_email = Column(String(100), ForeignKey('users.email'), nullable=False)
 
     #user = relationship('User', back_populates='bookings')
-    #classroom = relationship("Classroom", back_populates="bookings")
+    classroom = relationship("Classroom", back_populates="bookings")
 
     def __repr__(self):
         return f"<Booking(booking_id={self.booking_id}, user_email='{self.user_email}', classroom_id={self.classroom_id})>"
@@ -48,9 +48,9 @@ class Classroom(Base):
     start_time = Column(DateTime, nullable=False)
     capacity = Column(Integer, nullable=False)
     device = Column(String(255), nullable=False)
-    is_available = Column(String(10), nullable=False)
+    isAvailable = Column(Boolean, nullable=False, default=True)
 
-    #bookings = relationship("Booking", back_populates="classroom")
+    bookings = relationship("Booking", back_populates="classroom")
 
     def __repr__(self):
         return f"<Classroom(classroom_id={self.classroom_id}, building='{self.building}', floor={self.floor}, classroom_name='{self.classroom_name}', start_time='{self.start_time}')>"
