@@ -5,7 +5,9 @@ import os
 from .models import User, get_db
 
 login_bp = Blueprint("login", __name__)
-secret_key = ''
+
+secret_key = "your_secret_key"
+
 
 @login_bp.route('/login', methods=['POST'])
 def login():
@@ -37,7 +39,9 @@ def login():
                 "email": email,
                 "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=1)  # 1小时过期
             },
-            key= secret_key,
+
+            secret_key,
+
             algorithm="HS256"
         )
         print("Login sucessfully!")
