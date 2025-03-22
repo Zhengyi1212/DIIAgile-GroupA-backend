@@ -17,7 +17,7 @@ class Booking(Base):
     booking_id = Column(Integer, primary_key=True)
     classroom_id = Column(Integer, ForeignKey('classrooms.classroom_id'), nullable=False)
     user_email = Column(String(100), ForeignKey('users.email'), nullable=False)
-
+    
     #user = relationship('User', back_populates='bookings')
     classroom = relationship("Classroom", back_populates="bookings")
 
@@ -37,7 +37,7 @@ class User(Base):
     def __repr__(self):
         return f"<User(email='{self.email}', username='{self.username}', role='{self.role}')>"
 
-# 教室表
+
 class Classroom(Base):
     __tablename__ = 'classrooms'
 
@@ -49,7 +49,8 @@ class Classroom(Base):
     capacity = Column(Integer, nullable=False)
     device = Column(String(255), nullable=False)
     isAvailable = Column(Boolean, nullable=False, default=True)
-
+    forstudent =  Column(Boolean, nullable=False, default=True)
+    
     bookings = relationship("Booking", back_populates="classroom")
 
     def __repr__(self):

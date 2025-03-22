@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify
-from .models import Booking, get_db
+from .models import Booking, get_db,User
 
 from sqlalchemy.orm import joinedload
 
@@ -25,10 +25,14 @@ def get_bookings_from_database(email):
     db = next(get_db())
 
     try:
-        bookings = db.query(Booking)\
-            .options(joinedload(Booking.classroom))\
-            .filter(Booking.user_email == email)\
-            .all()
+        user = db.query(User).filter(User.email == email).first()
+        if user.role=="Admin":
+               bookings = db.query(Booking).options(joinedload(Booking.classroom)).all()
+        else:
+               bookings = db.query(Booking)\
+               .options(joinedload(Booking.classroom))\
+               .filter(Booking.user_email == email)\
+               .all()
 
         if not bookings:
             return {"success": False, "message": "No bookings found"}, 404
@@ -37,6 +41,7 @@ def get_bookings_from_database(email):
         for booking in bookings:
             result.append({
                 "booking_id": booking.booking_id,
+                "user_email": booking.user_email,
                 "classroom_details": {
                     "classroom_id": booking.classroom.classroom_id,
                     "building": booking.classroom.building,

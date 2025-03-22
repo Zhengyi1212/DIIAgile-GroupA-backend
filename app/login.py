@@ -41,10 +41,9 @@ def login():
             },
 
             secret_key,
-
             algorithm="HS256"
         )
-        print("Login sucessfully!")
+        print(f'Login sucessfully! Welcome {user.role}')
         return jsonify({"success": True, "token": token})
     else:
         return jsonify({"success": False, "message": "Invalid username or password"}), 401
