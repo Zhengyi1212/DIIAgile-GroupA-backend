@@ -116,22 +116,25 @@ def get_classroom(data):
             func.date(Classroom.start_time) == date  # Use func.date directly
         ).all()
         
-        # Extract time spans and availability
-        time_spans = []
+        # Define the five default time spans in order
+        default_times = ['08:00:00', '10:00:00', '14:00:00', '16:00:00', '19:00:00']
+        
+        # Create a dictionary to map time strings to their availability from the database
+        available_times = {}
         for classroom in classrooms:
             if classroom.start_time:
-                time = classroom.start_time.time().isoformat()  # Extract time (HH:MM:SS)
-                time_spans.append({
-                    "start_time": time,
-                    "is_available": classroom.isAvailable
-                })
+                time_str = classroom.start_time.time().isoformat()
+                available_times[time_str] = classroom.isAvailable
         
-        # Ensure there are exactly 5 time spans (fill with default values if necessary)
-        while len(time_spans) < 5:
+        # Build the time_spans list based on default_times and available_times
+        time_spans = []
+        for time_str in default_times:
+            is_available = available_times.get(time_str, False)
             time_spans.append({
-                "start_time": "00:00:00",  # Default time
-                "is_available": False      # Default availability
+                "start_time": time_str,
+                "is_available": is_available
             })
+        
         print(len(time_spans))
         # Return the result
         print("Classroom information retrieved!")
@@ -144,8 +147,6 @@ def get_classroom(data):
     except Exception as e:
         print("Something went wrong!!!")
         return jsonify({"success": False, "message": f"An error occurred: {str(e)}"}), 500
-
-
 
 from datetime import datetime
 from sqlalchemy.exc import IntegrityError
