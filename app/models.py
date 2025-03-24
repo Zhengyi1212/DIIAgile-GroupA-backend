@@ -18,7 +18,7 @@ class Booking(Base):
     classroom_id = Column(Integer, ForeignKey('classrooms.classroom_id'), nullable=False)
     user_email = Column(String(100), ForeignKey('users.email'), nullable=False)
     
-    #user = relationship('User', back_populates='bookings')
+    users = relationship('User', back_populates='bookings')
     classroom = relationship("Classroom", back_populates="bookings")
 
     def __repr__(self):
@@ -32,7 +32,7 @@ class User(Base):
     password_hash = Column(String(255), nullable=False)
     role = Column(String(50))
 
-    #bookings = relationship("Booking", back_populates="users")
+    bookings = relationship("Booking", back_populates="users")
 
     def __repr__(self):
         return f"<User(email='{self.email}', username='{self.username}', role='{self.role}')>"
