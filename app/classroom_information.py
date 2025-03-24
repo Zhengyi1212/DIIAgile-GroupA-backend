@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify, request
-from .models import Classroom, get_db, Booking  # assuming model.py is in the same directory
+from .models import Classroom, get_db, Booking,LogTable  # assuming model.py is in the same directory
 from sqlalchemy import func
 
 classroom_bp = Blueprint('classroom_information', __name__)
@@ -150,59 +150,72 @@ def get_classroom(data):
 from datetime import datetime
 from sqlalchemy.exc import IntegrityError
 
+from datetime import datetime, timedelta
+
+
 def create_booking(data):
     """
-    Create a booking for a specific classroom occurrence.
+    Create a booking for a specific classroom occurrence and log the event.
     """
     if not data:
         return jsonify({"success": False, "message": "Invalid request data"}), 400
-    
+
     user_email = data.get("email")
     classroom_name = data.get("classroom_name")
     start_time = data.get("time")  # Expected format: "YYYY-MM-DDTHH:MM:SS"
-    
+
     if not user_email or not classroom_name or not start_time:
         return jsonify({"success": False, "message": "Missing required fields"}), 400
-    
+
     db = next(get_db())
-    
+
     try:
-       
         # Fetch the classroom to update its availability
         classroom = db.query(Classroom).filter(
             Classroom.classroom_name == classroom_name,
             Classroom.start_time == start_time
         ).first()
-        
+
         if not classroom:
             return jsonify({"success": False, "message": "Classroom not found"}), 404
-        
+
         if not classroom.isAvailable:
             return jsonify({"success": False, "message": "Classroom is already booked"}), 400
-        
+
         # Get the next booking ID
         booking_id = get_next_booking_id(db)
-        
+
         # Create the new booking
         new_booking = Booking(
             booking_id=booking_id,
             user_email=user_email,
             classroom_id=classroom.classroom_id
         )
-        
+
         # Update classroom availability
         classroom.isAvailable = False
-        
+
         # Add and commit the new booking and classroom update
         db.add(new_booking)
+
+        # Calculate the end time (start_time + 2 hours)
+        start_time_dt = datetime.strptime(start_time, "%Y-%m-%dT%H:%M:%S")
+        end_time_dt = start_time_dt + timedelta(hours=2)
+
+        # Create a new log entry
+        event_description = f"{user_email} booked {classroom_name} from {start_time} to {end_time_dt.strftime('%Y-%m-%dT%H:%M:%S')}"
+        new_log = LogTable(event_description=event_description)
+
+        # Add and commit the new log entry
+        db.add(new_log)
         db.commit()
-        
+
         return jsonify({
             "success": True,
             "message": "Booking created successfully",
             "booking_id": booking_id
         }), 200
-    
+
     except IntegrityError:
         db.rollback()
         return jsonify({"success": False, "message": "Booking ID conflict. Please try again."}), 500
