@@ -1,13 +1,108 @@
 from flask import Blueprint, jsonify, request
 from .models import Classroom, get_db, Booking,LogTable  # assuming model.py is in the same directory
 from sqlalchemy import func
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from email.mime.base import MIMEBase
+from email import encoders
+import os
+from datetime import datetime
+from dotenv import load_dotenv
+
+load_dotenv()  # 加载 .env 文件中的环境变量
 
 classroom_bp = Blueprint('classroom_information', __name__)
 
 from flask import request, jsonify
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 from collections import defaultdict
 
+
+def create_ics_content(subject, start_dt, end_dt, location, description):
+    """
+    生成 .ics 内容，正确添加北京时间 (+08:00) 时区，然后转为 UTC 写入 .ics
+    """
+    # 强制加上北京时间时区（Asia/Shanghai = UTC+8）
+    beijing_tz = timezone(timedelta(hours=8))
+    if start_dt.tzinfo is None:
+        start_dt = start_dt.replace(tzinfo=beijing_tz)
+    if end_dt.tzinfo is None:
+        end_dt = end_dt.replace(tzinfo=beijing_tz)
+
+    # 转成 UTC（用于 .ics）
+    start_utc = start_dt.astimezone(timezone.utc).strftime('%Y%m%dT%H%M%SZ')
+    end_utc = end_dt.astimezone(timezone.utc).strftime('%Y%m%dT%H%M%SZ')
+    dtstamp = datetime.utcnow().strftime("%Y%m%dT%H%M%SZ")
+
+    return f"""BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Classroom Reservation System//EN
+CALSCALE:GREGORIAN
+METHOD:REQUEST
+BEGIN:VEVENT
+DTSTART:{start_utc}
+DTEND:{end_utc}
+DTSTAMP:{dtstamp}
+UID:{dtstamp}@classroom-booking.local
+SUMMARY:{subject}
+LOCATION:{location}
+DESCRIPTION:{description}
+STATUS:CONFIRMED
+SEQUENCE:0
+BEGIN:VALARM
+TRIGGER:-PT10M
+DESCRIPTION:Reminder
+ACTION:DISPLAY
+END:VALARM
+END:VEVENT
+END:VCALENDAR
+"""
+def send_booking_email_with_calendar(to_email, classroom_name, start_time_str, end_time_str):
+    # 邮箱配置
+    smtp_server = "smtp.qq.com"
+    smtp_port = 587
+    sender_email = os.getenv("MAIL_SENDER_EMAIL")
+    sender_password = os.getenv("MAIL_SENDER_PASSWORD")
+
+    # 事件信息
+    subject = f"Booking Confirmation: {classroom_name}"
+    location = classroom_name
+    description = f"Your classroom {classroom_name} has been booked."
+    start_time = datetime.strptime(start_time_str, "%Y-%m-%dT%H:%M:%S")
+    end_time = datetime.strptime(end_time_str, "%Y-%m-%dT%H:%M:%S")
+
+    # 创建主邮件体
+    msg = MIMEMultipart("mixed")
+    msg["From"] = sender_email
+    msg["To"] = to_email
+    msg["Subject"] = subject
+
+    body = f"""
+    <p>Dear user,</p>
+    <p>Your classroom <strong>{classroom_name}</strong> has been successfully booked.</p>
+    <p>📅 Time: {start_time_str} to {end_time_str}</p>
+    <p>Please find the attached calendar invite to add this event to your calendar.</p>
+    """
+
+    msg.attach(MIMEText(body, "html"))
+
+    # 创建 .ics 内容并附加
+    ics_content = create_ics_content(subject, start_time, end_time, location, description)
+    part = MIMEBase("text", "calendar", method="REQUEST", name="invite.ics")
+    part.set_payload(ics_content)
+    encoders.encode_base64(part)
+    part.add_header("Content-Disposition", "attachment; filename=invite.ics")
+    msg.attach(part)
+
+    try:
+        with smtplib.SMTP(smtp_server, smtp_port) as server:
+            server.starttls()
+            server.login(sender_email, sender_password)
+            server.sendmail(sender_email, to_email, msg.as_string())
+            print("✅ Email with calendar invite sent successfully")
+    except Exception as e:
+        print("❌ Failed to send email with calendar:", e)
 
 
 @classroom_bp.route('/classrooms', methods=['GET'])
@@ -207,9 +302,16 @@ def create_booking(data):
         event_description = f"{user_email} booked {classroom_name} from {start_time} to {end_time_dt.strftime('%Y-%m-%dT%H:%M:%S')}"
         new_log = LogTable(event_description=event_description)
 
-        # Add and commit the new log entry
         db.add(new_log)
         db.commit()
+
+        # Send confirmation email
+        send_booking_email_with_calendar(
+            to_email=user_email,
+            classroom_name=classroom_name,
+            start_time_str=start_time,
+            end_time_str=end_time_dt.strftime('%Y-%m-%dT%H:%M:%S')
+        )
 
         return jsonify({
             "success": True,
