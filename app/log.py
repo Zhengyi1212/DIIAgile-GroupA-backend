@@ -25,7 +25,7 @@ def export_logs():
     # 
     file_path = "logs_export.xlsx"
     df.to_excel(file_path, index=False)
-
+ 
    
 
     return send_file("D:\CSU-DUNDEE\JUNIOR-2\AgileProgaming\DiiBookingSystem\DiiBookingSystem-backend\\logs_export.xlsx", as_attachment=True)

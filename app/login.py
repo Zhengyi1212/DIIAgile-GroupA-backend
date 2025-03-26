@@ -46,81 +46,53 @@ def send_email(to_email: str, subject: str, html_body: str):
 
 
 @login_bp.route('/login', methods=['POST'])
-def login_with_verification():
+def login():
     data = request.get_json()
     if not data:
         return jsonify({"success": False, "message": "Invalid request data"}), 400
-
+    
+    
     email = data.get("email")
     password = data.get("password")
-
+    
+    # start session
     db = next(get_db())
-    user = db.query(User).filter(User.email == email).first()
+    user_ = db.query(User)\
+        .filter(User.email == email)\
+        .all()
+    if not user_:
+        return jsonify({"success": False, "message": "Account does not exist. Please register first!"}), 401
 
-    if not user or user.password_hash != static_hash(password):
-        return jsonify({"success": False, "message": "Invalid email or password"}), 401
+    user = user_[0]
+    print(password)
+    print(static_hash(password))
+    print(user.password_hash)
+    if user.password_hash == static_hash(password):
+        token = jwt.encode(
+            {
+                "username": user.username,
+                "role": user.role,
+                "email": email,
+                "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=1)  # 1小时过期
+            },
 
-    # ✅ 生成 6 位验证码并保存（5分钟有效）
-    code = str(random.randint(100000, 999999))
-    expires_at = time.time() + 300  # 5 分钟
-
-    email_verification_store[email] = (code, expires_at)
-
-    # ✅ 发验证码邮件
-    send_email(
-        to_email=email,
-        subject="🔐 Your Login Verification Code",
-        html_body=f"""
-        <p>Hi <strong>{user.username}</strong>,</p>
-        <p>Your login verification code is:</p>
-        <h2>{code}</h2>
-        <p>This code is valid for 5 minutes.</p>
-        """
-    )
-
-    return jsonify({
-        "success": True,
-        "message": "Verification code sent to email."
-    }), 200
-
-@login_bp.route('/login/verify', methods=['POST'])
-def login_verify():
-    data = request.get_json()
-    email = data.get("email")
-    code = data.get("code")
-    print(f"Received email: {email}, code: {code}")
-    print("Stored:", email_verification_store.get(email))
-    stored = email_verification_store.get(email)
-    if not stored:
-        return jsonify({"success": False, "message": "No verification code found"}), 400
-
-    real_code, expires_at = stored
-    if time.time() > expires_at:
-        return jsonify({"success": False, "message": "Verification code expired"}), 400
-    if code != real_code:
-        return jsonify({"success": False, "message": "Invalid verification code"}), 400
-
-    db = next(get_db())
-    user = db.query(User).filter(User.email == email).first()
-    if not user:
-        return jsonify({"success": False, "message": "User not found"}), 404
-
-    token = jwt.encode({
-        "username": user.username,
-        "role": user.role,
-        "email": user.email,
-        "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=1)
-    }, os.getenv("JWT_SECRET"), algorithm="HS256")
-
-    # 清除验证码
-    del email_verification_store[email]
-
-    return jsonify({
-        "success": True,
-        "token": token,
-        "username": user.username,
-        "role": user.role
-    })
+            secret_key,
+            algorithm="HS256"
+        )
+        send_email(
+            to_email=email,
+            subject="🔐 Login Successful",
+            html_body=f"""
+                        <p>Hi <strong>{user.username}</strong>,</p>
+                        <p>You have successfully logged in to the Classroom Reservation System.</p>
+                        <p>If this wasn't you, please contact the administrator.</p>
+                        <p>Time: {datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")}</p>
+                    """
+        )
+        print(f'Login sucessfully! Welcome {user.role}')
+        return jsonify({"success": True, "token": token})
+    else:
+        return jsonify({"success": False, "message": "Invalid username or password"}), 401
     
 import hashlib
 
@@ -135,5 +107,3 @@ def static_hash(input_string):
     # Get the hexadecimal digest of the hash
     return hash_object.hexdigest()
 
-# Example usage
-print(static_hash("hello")) 

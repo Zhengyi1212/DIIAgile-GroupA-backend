@@ -1,6 +1,4 @@
 from flask import Flask, request, jsonify, Blueprint
-import json
-import os
 import jwt
 import datetime
 from .models import get_db,User
