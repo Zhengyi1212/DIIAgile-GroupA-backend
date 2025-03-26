@@ -3,11 +3,11 @@ import json
 import os
 import jwt
 import datetime
+from .models import get_db,User
+from .login import  static_hash
 
 
 SECRET_KEY = "your_secret_key"
-my_path = os.path.abspath(os.path.dirname(__file__))
-database_file= os.path.join(my_path, "..\database.txt")
 
 profile_bp = Blueprint("profile", __name__)
 
@@ -23,31 +23,28 @@ def edit_profile():
     print(f'USername:{new_username}')
     new_password = data.get("password")
     
-    database = {}
-    if os.path.exists(database_file):
-        with open(database_file, "r") as file:
-            database = json.load(file)
+    db = next(get_db())
     
+    targetUser = db.query(User).filter(User.email == email).first()
+    targetUser.username = new_username
+    targetUser.password_hash = static_hash(new_password)
+   
     
-    
-    user = database[email]
-    user['username'] = new_username
-    user['password'] = new_password  
-    
-    
-    with open(database_file, "w") as file:
-        json.dump(database, file, indent=4)
     
     token = jwt.encode(
         {
-            "username": user["username"],
-            "role": user["role"],
+            "username": targetUser.username,
+            "role": targetUser.role,
             "email": email,
             "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=1)  
         },
             SECRET_KEY,
             algorithm="HS256"
         )
+    db.commit()
+    db.refresh(targetUser)
+
+   
     return jsonify({"success": True, "token": token})
    
         

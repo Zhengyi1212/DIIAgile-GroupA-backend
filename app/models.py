@@ -4,7 +4,7 @@ from sqlalchemy.orm import relationship, sessionmaker,declarative_base
 import pymysql  # 确保安装了 pymysql
 
 # MySQL 连接信息
-DATABASE_URL = "mysql+pymysql://root:xxh2022666@localhost:3306/booksystem"
+DATABASE_URL = "mysql+pymysql://root:xd03@localhost:3306/booksystem"
 
 # 创建 SQLAlchemy 连接
 Base = declarative_base()
@@ -17,6 +17,8 @@ class Booking(Base):
     booking_id = Column(Integer, primary_key=True)
     classroom_id = Column(Integer, ForeignKey('classrooms.classroom_id'), nullable=False)
     user_email = Column(String(100), ForeignKey('users.email'), nullable=False)
+    
+    users = relationship('User', back_populates='bookings')
     #user = relationship('User', back_populates='bookings')
     classroom = relationship("Classroom", back_populates="bookings")
 
@@ -31,7 +33,7 @@ class User(Base):
     password_hash = Column(String(255), nullable=False)
     role = Column(String(50))
 
-    #bookings = relationship("Booking", back_populates="users")
+    bookings = relationship("Booking", back_populates="users")
 
     def __repr__(self):
         return f"<User(email='{self.email}', username='{self.username}', role='{self.role}')>"
