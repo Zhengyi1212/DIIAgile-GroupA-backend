@@ -4,7 +4,7 @@ import os
 import jwt
 import datetime
 from .models import get_db,User
-from login import  static_hash
+from .login import  static_hash
 
 
 SECRET_KEY = "your_secret_key"
