@@ -1,18 +1,17 @@
 from flask import Flask, request, jsonify, Blueprint
 from .models import get_db, User
 import json
-
+import random
+import time
 
 # Define the Blueprint for sign-up
 signup_bp = Blueprint("sign_up", __name__)
+
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import os
 from dotenv import load_dotenv
-import time
-import random
-
 load_dotenv() 
 email_verification_store = {}  # email -> (code, expires_at)
 
@@ -59,48 +58,52 @@ def send_signup_code():
 
     return jsonify({"success": True, "message": "Verification code sent"}), 200
 
-
 @signup_bp.route('/signup', methods=['POST'])
 def sign_up():
-    # Get data from the frontend
     data = request.get_json()
     if not data:
         return jsonify({"success": False, "message": "Invalid request data"}), 400
-   
+
     email = data.get("email")
-    print(email)
     username = data.get("username")
-    print(username)
     password = data.get("password")
-    print(password)
     role = data.get("role")
+    code = data.get("code")
 
-    if not username or not password or not role:
-        return jsonify({"success": False, "message": "Email, username, password, and role are required"}), 400
-    
-    ## start a seesion with db
-    db = next(get_db())
-    
-    try :
+    if not username or not password or not role or not email or not code:
+        return jsonify({"success": False, "message": "All fields are required"}), 400
+
+    try:
+        db = next(get_db())
+    except Exception as e:
+        print(f"❌ 数据库连接失败: {e}")
+        return jsonify({"success": False, "message": "Database connection failed"}), 500
+
+    try:
         existing_user = db.query(User).filter(User.email == email).first()
-        
-
-    # Step 2: If the user exists, return False
         if existing_user:
-            return jsonify({"success": False, "message": "Account already exists with the given email"}), 401
-        
-        # add to database"
-        print(email)
-        new_user = User(username=username, email=email, role=role,password_hash=static_hash(password))
+            return jsonify({"success": False, "message": "Email already registered"}), 400
+
+        stored = email_verification_store.get(email)
+        if not stored:
+            return jsonify({"success": False, "message": "No verification code found"}), 400
+        real_code, expires_at = stored
+        if time.time() > expires_at:
+            return jsonify({"success": False, "message": "Verification code expired"}), 400
+        if code != real_code:
+            return jsonify({"success": False, "message": "Invalid verification code"}), 400
+
+        new_user = User(username=username, email=email, role=role, password_hash=static_hash(password))
         db.add(new_user)
         db.commit()
-        db.refresh(new_user)
-        print("Signup sucessfully!")
-        return jsonify({"success": True, "message": "Registration successful"})
+
+        del email_verification_store[email]  # 清除验证码
+
+        return jsonify({"success": True, "message": "Registration successful"}), 200
 
     except Exception as e:
-        print(f"❌ Fail to connect to database: {e}")
-
+        print(f"❌ 注册过程中出错: {e}")
+        return jsonify({"success": False, "message": "An error occurred during registration"}), 500
     
 import hashlib
 

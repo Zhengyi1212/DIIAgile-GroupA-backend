@@ -19,6 +19,7 @@ class Booking(Base):
     user_email = Column(String(100), ForeignKey('users.email'), nullable=False)
     
     users = relationship('User', back_populates='bookings')
+    #user = relationship('User', back_populates='bookings')
     classroom = relationship("Classroom", back_populates="bookings")
 
     def __repr__(self):

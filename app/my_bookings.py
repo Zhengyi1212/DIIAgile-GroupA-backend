@@ -8,11 +8,10 @@ mybooking_bp = Blueprint("my_bookings", __name__)
 
 @mybooking_bp.route('/mybookings', methods=['GET'])
 def get_bookings():
-   data = request.get_json()
-   if not data or 'email' not in data:
-       return jsonify({"success": False, "message": "Invalid request data"}), 400
-   
+   print("Step1!")
+
    email = request.args.get('email')
+   print(email)
 
    print(f"Fetching bookings for email: {email}")
    response_data, status_code = get_bookings_from_database(email)
@@ -74,12 +73,12 @@ def cancel_bookings():
     
     db = next(get_db())
     
-    target_booking = db.query(Booking).filter(booking_id = target_booking_id)
+    db.query(Booking).filter(Booking.booking_id == target_booking_id).delete()
     
-    db.delete(target_booking_id)
+    
     print(f'{target_booking_id} deleted!')
     db.commit()
-    db.refresh()
     
-    return jsonify({'sucess':True, 'message': "Booking record deleted sucessfully!"})
+    
+    return jsonify({'success':True, 'message': "Booking record deleted sucessfully!"})
     #  access db and cancle it,
