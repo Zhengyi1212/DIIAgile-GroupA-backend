@@ -17,7 +17,6 @@ class Booking(Base):
     booking_id = Column(Integer, primary_key=True)
     classroom_id = Column(Integer, ForeignKey('classrooms.classroom_id'), nullable=False)
     user_email = Column(String(100), ForeignKey('users.email'), nullable=False)
-    
     #user = relationship('User', back_populates='bookings')
     classroom = relationship("Classroom", back_populates="bookings")
 
