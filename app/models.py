@@ -4,7 +4,7 @@ from sqlalchemy.orm import relationship, sessionmaker,declarative_base
 import pymysql  # 确保安装了 pymysql
 
 # MySQL 连接信息
-DATABASE_URL = "mysql+pymysql://root:xd03@localhost:3306/booksystem"
+DATABASE_URL = "mysql+pymysql://root:xxh2022666@localhost:3306/booksystem"
 
 # 创建 SQLAlchemy 连接
 Base = declarative_base()
