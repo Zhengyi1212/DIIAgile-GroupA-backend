@@ -39,11 +39,9 @@ def get_bookings_from_database(email):
 
         result = []
         for booking in bookings:
-
             result.append({
                 "booking_id": booking.booking_id,
                 "user_email": booking.user_email,
-                "user_role": booking.users.role,
                 "classroom_details": {
                     "classroom_id": booking.classroom.classroom_id,
                     "building": booking.classroom.building,
@@ -53,7 +51,6 @@ def get_bookings_from_database(email):
                     "capacity": booking.classroom.capacity,
                     "device": booking.classroom.device,
                     "isAvailable": booking.classroom.isAvailable
-
                 }
             })
 
