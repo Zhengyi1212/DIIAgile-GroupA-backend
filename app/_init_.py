@@ -3,6 +3,7 @@ from app.login import login_bp
 from app.sign_up import signup_bp
 from app.profile import profile_bp
 from app.my_bookings import mybooking_bp
+from app.forgot_password import forgot_bp
 from app.log import log_bp
 from .classroom_information import classroom_bp
 from flask_cors import CORS
@@ -23,6 +24,7 @@ def create_app():
     app.register_blueprint(profile_bp)
     app.register_blueprint(mybooking_bp)
     app.register_blueprint(classroom_bp)
+    app.register_blueprint(forgot_bp)
     app.register_blueprint(log_bp)
     # Enable CORS for the entire app
     CORS(app)

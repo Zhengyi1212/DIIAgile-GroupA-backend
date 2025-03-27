@@ -59,20 +59,20 @@ END:VEVENT
 END:VCALENDAR
 """
 def send_booking_email_with_calendar(to_email, classroom_name, start_time_str, end_time_str):
-    # 邮箱配置
+   
     smtp_server = "smtp.qq.com"
     smtp_port = 587
     sender_email = os.getenv("MAIL_SENDER_EMAIL")
     sender_password = os.getenv("MAIL_SENDER_PASSWORD")
 
-    # 事件信息
+   
     subject = f"Booking Confirmation: {classroom_name}"
     location = classroom_name
     description = f"Your classroom {classroom_name} has been booked."
     start_time = datetime.strptime(start_time_str, "%Y-%m-%dT%H:%M:%S")
     end_time = datetime.strptime(end_time_str, "%Y-%m-%dT%H:%M:%S")
 
-    # 创建主邮件体
+    # email content
     msg = MIMEMultipart("mixed")
     msg["From"] = sender_email
     msg["To"] = to_email
@@ -87,7 +87,7 @@ def send_booking_email_with_calendar(to_email, classroom_name, start_time_str, e
 
     msg.attach(MIMEText(body, "html"))
 
-    # 创建 .ics 内容并附加
+    # 
     ics_content = create_ics_content(subject, start_time, end_time, location, description)
     part = MIMEBase("text", "calendar", method="REQUEST", name="invite.ics")
     part.set_payload(ics_content)
@@ -326,3 +326,8 @@ def create_booking(data):
         db.rollback()
         print("Something went wrong!!!")
         return jsonify({"success": False, "message": f"An error occurred: {str(e)}"}), 500
+    
+    
+@classroom_bp.route('/modify_classroominformation', methods=['POST'])
+def get_modify_classroom_information():
+    pass
