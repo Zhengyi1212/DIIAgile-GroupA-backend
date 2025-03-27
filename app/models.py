@@ -8,7 +8,7 @@ DATABASE_URL = "mysql+pymysql://root:xd03@localhost:3306/booksystem"
 
 
 Base = declarative_base()
-engine = create_engine(DATABASE_URL, echo=True)  # echo=True 用于调试，生产环境可设为 False
+engine = create_engine(DATABASE_URL, echo=True)  
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 

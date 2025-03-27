@@ -10,12 +10,12 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from dotenv import load_dotenv
 
-# login.py 开头
+
 from collections import defaultdict
 import time
 import random
 
-# 临时内存结构：email -> (code, expires_at)
+
 email_verification_store = {}
 
 load_dotenv()
