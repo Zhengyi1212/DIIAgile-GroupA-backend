@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify
-from .models import Booking, get_db,User
+from .models import Booking, get_db,User,Classroom
 
 from sqlalchemy.orm import joinedload
 
@@ -74,9 +74,11 @@ def get_bookings_from_database(email):
 
         result = []
         for booking in bookings:
+            print(booking.classroom.start_time)
             result.append({
                 "booking_id": booking.booking_id,
                 "user_email": booking.user_email,
+                "user_role": booking.users.role,
                 "classroom_details": {
                     "classroom_id": booking.classroom.classroom_id,
                     "building": booking.classroom.building,
@@ -101,7 +103,6 @@ def get_bookings_from_database(email):
 
 @mybooking_bp.route('/mybookings', methods=['POST'])
 def cancel_bookings():
-    
     data = request.get_json()
     booking_id = data.get("booking_id")
 
@@ -114,7 +115,11 @@ def cancel_bookings():
         classroom_name = booking.classroom.classroom_name
         start_time = booking.classroom.start_time
         user_email = booking.user_email
-
+        classroom_id = booking.classroom_id
+        
+        classroom = db.query(Classroom).filter(Classroom.classroom_id == classroom_id )
+        # Update classroom availability
+        classroom.isAvailable = False
         db.delete(booking)
         db.commit()
 

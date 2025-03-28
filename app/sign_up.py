@@ -47,7 +47,7 @@ def send_signup_code():
         return jsonify({"success": False, "message": "Email already registered"}), 400
 
     code = str(random.randint(100000, 999999))
-    expires_at = time.time() + 300  # 5分钟
+    expires_at = time.time() + 300  
     email_verification_store[email] = (code, expires_at)
 
     send_email(
@@ -76,7 +76,7 @@ def sign_up():
     try:
         db = next(get_db())
     except Exception as e:
-        print(f"❌ 数据库连接失败: {e}")
+        print(f"❌ Fail to connect to DB: {e}")
         return jsonify({"success": False, "message": "Database connection failed"}), 500
 
     try:
@@ -97,12 +97,12 @@ def sign_up():
         db.add(new_user)
         db.commit()
 
-        del email_verification_store[email]  # 清除验证码
+        del email_verification_store[email]  
 
         return jsonify({"success": True, "message": "Registration successful"}), 200
 
     except Exception as e:
-        print(f"❌ 注册过程中出错: {e}")
+        print(f"❌ Fail to register : {e}")
         return jsonify({"success": False, "message": "An error occurred during registration"}), 500
     
 import hashlib

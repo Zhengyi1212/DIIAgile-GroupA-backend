@@ -14,7 +14,7 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 class Booking(Base):
     __tablename__ = 'bookings'
-    booking_id = Column(Integer, primary_key=True)
+    booking_id = Column(Integer, primary_key=True,autoincrement=True)
     classroom_id = Column(Integer, ForeignKey('classrooms.classroom_id'), nullable=False)
     user_email = Column(String(100), ForeignKey('users.email'), nullable=False)
     
@@ -61,8 +61,8 @@ class LogTable(Base):
     __tablename__ = 'logtable'
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    event_time = Column(DateTime, default=func.now())  # 默认当前时间
-    event_description = Column(String(255), nullable=False)  # 事件描述
+    event_time = Column(DateTime, default=func.now()) 
+    event_description = Column(String(255), nullable=False)  
 
     def __repr__(self):
         return f"<LogTable(log_id={self.id}, event_time='{self.event_time}', event_description='{self.event_description}')>"

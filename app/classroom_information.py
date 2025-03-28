@@ -10,7 +10,7 @@ import os
 from datetime import datetime
 from dotenv import load_dotenv
 
-load_dotenv()  # 加载 .env 文件中的环境变量
+load_dotenv() 
 
 classroom_bp = Blueprint('classroom_information', __name__)
 
@@ -20,17 +20,14 @@ from collections import defaultdict
 
 
 def create_ics_content(subject, start_dt, end_dt, location, description):
-    """
-    生成 .ics 内容，正确添加北京时间 (+08:00) 时区，然后转为 UTC 写入 .ics
-    """
-    # 强制加上北京时间时区（Asia/Shanghai = UTC+8）
+   
+   
     beijing_tz = timezone(timedelta(hours=8))
     if start_dt.tzinfo is None:
         start_dt = start_dt.replace(tzinfo=beijing_tz)
     if end_dt.tzinfo is None:
         end_dt = end_dt.replace(tzinfo=beijing_tz)
 
-    # 转成 UTC（用于 .ics）
     start_utc = start_dt.astimezone(timezone.utc).strftime('%Y%m%dT%H%M%SZ')
     end_utc = end_dt.astimezone(timezone.utc).strftime('%Y%m%dT%H%M%SZ')
     dtstamp = datetime.utcnow().strftime("%Y%m%dT%H%M%SZ")
@@ -328,6 +325,103 @@ def create_booking(data):
         return jsonify({"success": False, "message": f"An error occurred: {str(e)}"}), 500
     
     
-@classroom_bp.route('/modify_classroominformation', methods=['POST'])
-def get_modify_classroom_information():
-    pass
+@classroom_bp.route('/classroom_information/modify_room', methods=['POST'])
+def modify_room():
+    db = next(get_db())
+    data = request.get_json()
+
+    classroom_name = data.get("classroom_name")
+    new_capacity = data.get("new_capacity")
+    device = data.get("device")
+    disabled_slots = data.get("disabled_slots", [])
+    admin_email=data.get("admin_email")
+    if not classroom_name:
+        return jsonify({"success": False, "message": "Missing classroom name."}), 400
+
+    try:
+       
+        if new_capacity:
+            db.query(Classroom).filter(
+                Classroom.classroom_name == classroom_name
+            ).update({Classroom.capacity: int(new_capacity)})
+
+        if device:
+            db.query(Classroom).filter(
+                Classroom.classroom_name == classroom_name
+            ).update({Classroom.device: device})
+
+        updated_count = 0
+        canceled_count = 0
+        print("🛑 Disabled time span:")
+        for ts in disabled_slots:
+            print(" -", ts)
+            try:
+                dt = datetime.strptime(ts, "%Y-%m-%d %H:%M:%S")
+            except ValueError:
+                continue
+
+            classroom = db.query(Classroom).filter(
+                Classroom.classroom_name == classroom_name,
+                Classroom.start_time == dt
+            ).first()
+
+            if classroom:
+              
+                bookings = db.query(Booking).filter(
+                    Booking.classroom_id == classroom.classroom_id
+                ).all()
+
+                for booking in bookings:
+                    db.delete(booking)
+                    canceled_count += 1
+                    send_disable_notice_email(booking.user_email, classroom_name, ts)
+
+                classroom.isAvailable = False
+                updated_count += 1
+                if admin_email:
+                    admin_booking=Booking(
+                        user_email=admin_email,
+                        classroom_id=classroom.classroom_id
+                   )
+                    db.add(admin_booking)
+        log_message = f"Admin modified {classroom_name} | capacity={new_capacity}, device={device}, disabled={updated_count} slots, canceled={canceled_count} bookings"
+        db.add(LogTable(event_description=log_message))
+        db.commit()
+
+        return jsonify({"success": True, "message": f"{updated_count} time slots disabled, {canceled_count} bookings canceled."}), 200
+
+    except Exception as e:
+        db.rollback()
+        print("❌ Error modifying room:", e)
+        return jsonify({"success": False, "message": f"Server error: {str(e)}"}), 500
+
+
+from datetime import datetime
+from sqlalchemy.exc import IntegrityError
+
+from datetime import datetime, timedelta
+from flask import request, jsonify
+from datetime import datetime
+from .models import Classroom, LogTable, get_db
+def send_disable_notice_email(to_email, classroom_name, canceled_time):
+    subject = f"⛔ Your Booking for {classroom_name} Was Canceled"
+    content = f"""
+    Dear user,<br><br>
+    Your booking for <b>{classroom_name}</b> at <b>{canceled_time}</b> has been <b>canceled</b> by the administrator due to room being disabled.<br><br>
+    Please select another time slot if needed.<br><br>
+    Sorry for the inconvenience.<br>
+    """
+
+    msg = MIMEText(content, "html")
+    msg["Subject"] = subject
+    msg["From"] = os.getenv("MAIL_SENDER_EMAIL")
+    msg["To"] = to_email
+
+    try:
+        with smtplib.SMTP("smtp.qq.com", 587) as server:
+            server.starttls()
+            server.login(os.getenv("MAIL_SENDER_EMAIL"), os.getenv("MAIL_SENDER_PASSWORD"))
+            server.sendmail(msg["From"], to_email, msg.as_string())
+            print(f"📧 Disable notice sent to {to_email}")
+    except Exception as e:
+        print(f"❌ Failed to send email to {to_email}:", e)
